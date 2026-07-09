@@ -1,0 +1,160 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sympy import symbols, diff, sympify, lambdify
+
+# ======================================
+# 함수 입력
+# ======================================
+
+print("=" * 60)
+print(" 경사하강법 시뮬레이션 ")
+print("=" * 60)
+
+expr_str = input("함수를 입력하세요 : ")
+
+x = symbols("x")
+
+try:
+    expr = sympify(expr_str)
+except:
+    print("함수 입력이 잘못되었습니다.")
+    exit()
+
+# ======================================
+# 도함수 자동 계산
+# ======================================
+
+derivative = diff(expr, x)
+
+print("\n도함수 =", derivative)
+
+# 계산 가능한 함수로 변환
+f = lambdify(x, expr, "numpy")
+df = lambdify(x, derivative, "numpy")
+
+# ======================================
+# 사용자 입력
+# ======================================
+
+print()
+
+start_x = float(input("초기값 x : "))
+learning_rate = float(input("학습률 α : "))
+iterations = int(input("반복 횟수 : "))
+
+# ======================================
+# 경사하강법
+# ======================================
+
+current_x = start_x
+
+x_history = [current_x]
+y_history = [f(current_x)]
+gradient_history = [df(current_x)]
+
+print("\n" + "=" * 75)
+print(f"{'반복':<6}{'x':<15}{'기울기':<18}{'f(x)':<18}")
+print("=" * 75)
+
+for i in range(iterations):
+
+    gradient = df(current_x)
+
+    current_x = current_x - learning_rate * gradient
+
+    x_history.append(current_x)
+    y_history.append(f(current_x))
+    gradient_history.append(df(current_x))
+
+    print(f"{i+1:<6}{current_x:<15.6f}{gradient:<18.6f}{f(current_x):<18.6f}")
+
+print("=" * 75)
+print("최종 결과")
+print(f"x = {current_x:.8f}")
+print(f"f(x) = {f(current_x):.8f}")
+print("=" * 75)
+
+# ======================================
+# 그래프 범위 자동 설정
+# ======================================
+
+xmin = min(x_history) - 3
+xmax = max(x_history) + 3
+
+X = np.linspace(xmin, xmax, 500)
+Y = f(X)
+
+# ======================================
+# 그래프 1
+# ======================================
+
+plt.figure(figsize=(8,6))
+
+plt.plot(X, Y, linewidth=2, label="Function")
+
+plt.scatter(
+    x_history,
+    y_history,
+    color="red",
+    s=50,
+    label="Gradient Descent"
+)
+
+plt.plot(
+    x_history,
+    y_history,
+    "--",
+    linewidth=1
+)
+
+for i in range(len(x_history)):
+    plt.text(
+        x_history[i],
+        y_history[i],
+        str(i),
+        fontsize=8
+    )
+
+plt.title("Gradient Descent Path")
+plt.xlabel("x")
+plt.ylabel("f(x)")
+plt.grid(True)
+plt.legend()
+
+# ======================================
+# 그래프 2
+# ======================================
+
+plt.figure(figsize=(8,5))
+
+plt.plot(
+    range(len(y_history)),
+    y_history,
+    marker="o",
+    linewidth=2
+)
+
+plt.title("Loss Function")
+plt.xlabel("Iteration")
+plt.ylabel("f(x)")
+plt.grid(True)
+
+# ======================================
+# 그래프 3
+# ======================================
+
+plt.figure(figsize=(8,5))
+
+plt.plot(
+    range(len(gradient_history)),
+    gradient_history,
+    marker="o",
+    linewidth=2
+)
+
+plt.title("Gradient")
+plt.xlabel("Iteration")
+plt.ylabel("Gradient")
+plt.grid(True)
+
+plt.show()
